@@ -7,6 +7,7 @@ import { useI18n } from '../i18n';
 const GRID_WIDTH = 176;
 const GRID_HEIGHT = 118;
 const HISTORY_LIMIT = 8;
+const NOISE_RANGE = 14;
 
 const CanvasBoard: React.FC = () => {
   const { t } = useI18n();
@@ -14,6 +15,9 @@ const CanvasBoard: React.FC = () => {
   const gridRef = useRef<Uint8Array>(createGrid(GRID_WIDTH, GRID_HEIGHT));
   const bufferRef = useRef<Uint8Array>(createGrid(GRID_WIDTH, GRID_HEIGHT));
   const historyRef = useRef<Uint8Array[]>([]);
+  const offscreenRef = useRef<HTMLCanvasElement | null>(null);
+  const imageDataRef = useRef<ImageData | null>(null);
+  const noiseRef = useRef<Uint8Array>(new Uint8Array(GRID_WIDTH * GRID_HEIGHT));
   const [fps, setFps] = useState(0);
   const [particles, setParticles] = useState(0);
   const [status, setStatus] = useState<string>(t('status.ready'));
@@ -46,20 +50,40 @@ const CanvasBoard: React.FC = () => {
     setStatus(t('status.ready'));
   }, [t]);
 
+  const refreshNoise = () => {
+    const noise = noiseRef.current;
+    for (let i = 0; i < noise.length; i++) {
+      noise[i] = Math.floor(Math.random() * NOISE_RANGE);
+    }
+  };
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    const scale = lowPower ? 3 : 5;
+    canvas.width = GRID_WIDTH * scale;
+    canvas.height = GRID_HEIGHT * scale;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    canvas.width = GRID_WIDTH;
-    canvas.height = GRID_HEIGHT;
+
+    if (!offscreenRef.current) {
+      const off = document.createElement('canvas');
+      off.width = GRID_WIDTH;
+      off.height = GRID_HEIGHT;
+      offscreenRef.current = off;
+      imageDataRef.current = off.getContext('2d')?.createImageData(GRID_WIDTH, GRID_HEIGHT) ?? null;
+    }
+    const offscreen = offscreenRef.current;
+    const offCtx = offscreen.getContext('2d');
+    const imageData = imageDataRef.current;
+    if (!offCtx || !imageData) return;
+    refreshNoise();
 
     let last = performance.now();
     let raf = 0;
     let accumulator = 0;
     let localParticles = 0;
-
-    const imageData = ctx.createImageData(GRID_WIDTH, GRID_HEIGHT);
+    let noiseTick = 0;
 
     const render = (time: number) => {
       const delta = time - last;
@@ -78,7 +102,8 @@ const CanvasBoard: React.FC = () => {
         bufferRef.current = original; // swap buffers for reuse
       }
 
-      drawGrid(ctx, imageData);
+      if (noiseTick++ % 10 === 0) refreshNoise();
+      drawGrid(ctx, offCtx, imageData);
       frameRef.current += 1;
       raf = requestAnimationFrame(render);
       setParticles(localParticles || countParticles(gridRef.current));
@@ -96,20 +121,36 @@ const CanvasBoard: React.FC = () => {
     return () => window.clearInterval(id);
   }, []);
 
-  const drawGrid = (ctx: CanvasRenderingContext2D, imageData: ImageData) => {
+  const drawGrid = (
+    viewCtx: CanvasRenderingContext2D,
+    offCtx: CanvasRenderingContext2D,
+    imageData: ImageData
+  ) => {
     const data = imageData.data;
     const grid = gridRef.current;
     const lut = colorLut;
+    const noise = noiseRef.current;
     for (let i = 0; i < grid.length; i++) {
       const id = grid[i];
       const lutIdx = id * 4;
       const di = i * 4;
-      data[di] = lut[lutIdx];
-      data[di + 1] = lut[lutIdx + 1];
-      data[di + 2] = lut[lutIdx + 2];
+      const n = noise[i] - NOISE_RANGE / 2;
+      data[di] = Math.min(255, Math.max(0, lut[lutIdx] + n));
+      data[di + 1] = Math.min(255, Math.max(0, lut[lutIdx + 1] + n));
+      data[di + 2] = Math.min(255, Math.max(0, lut[lutIdx + 2] + n));
       data[di + 3] = lut[lutIdx + 3];
     }
-    ctx.putImageData(imageData, 0, 0);
+    offCtx.putImageData(imageData, 0, 0);
+    viewCtx.clearRect(0, 0, viewCtx.canvas.width, viewCtx.canvas.height);
+    viewCtx.imageSmoothingEnabled = true;
+    viewCtx.drawImage(offCtx.canvas, 0, 0, viewCtx.canvas.width, viewCtx.canvas.height);
+    if (!lowPower) {
+      viewCtx.globalAlpha = 0.32;
+      viewCtx.filter = 'blur(8px)';
+      viewCtx.drawImage(offCtx.canvas, 0, 0, viewCtx.canvas.width, viewCtx.canvas.height);
+      viewCtx.filter = 'none';
+      viewCtx.globalAlpha = 1;
+    }
   };
 
   const pushHistory = () => {
@@ -291,7 +332,14 @@ const CanvasBoard: React.FC = () => {
           <div className="card" style={{ padding: '0.5rem' }}>
             <canvas
               ref={canvasRef}
-              style={{ width: '100%', borderRadius: 12, border: '1px solid var(--border)', touchAction: 'none', background: '#0b1220', imageRendering: 'pixelated' as const }}
+              style={{
+                width: '100%',
+                borderRadius: 12,
+                border: '1px solid var(--border)',
+                touchAction: 'none',
+                background: 'radial-gradient(circle at 12% 24%, rgba(34, 197, 94, 0.12), transparent 38%), radial-gradient(circle at 86% 30%, rgba(14, 165, 233, 0.12), transparent 42%), #0b1220',
+                boxShadow: '0 15px 40px rgba(0,0,0,0.35)'
+              }}
             />
           </div>
           <div className="card" style={{ display: 'grid', gap: '0.75rem' }}>
