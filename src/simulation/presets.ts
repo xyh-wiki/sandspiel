@@ -27,6 +27,10 @@ const sprinkle = (grid: Uint8Array, width: number, count: number, id: number) =>
   }
 };
 
+const bandFill = (grid: Uint8Array, width: number, y: number, thickness: number, id: number) => {
+  fillRect(grid, width, 0, y, width, Math.min(grid.length / width - 1, y + thickness), id);
+};
+
 export const PRESETS: Preset[] = [
   {
     id: 'garden-homestead',
@@ -34,14 +38,26 @@ export const PRESETS: Preset[] = [
     descriptionKey: 'preset.garden.desc',
     build: (width, height) => {
       const grid = new Uint8Array(width * height);
-      const ground = Math.floor(height * 0.7);
-      fillRect(grid, width, 0, ground, width, height - 1, ELEMENTS.soil.id);
-      fillRect(grid, width, Math.floor(width * 0.1), ground - 6, Math.floor(width * 0.9), ground - 4, ELEMENTS.soil.id);
-      fillRect(grid, width, Math.floor(width * 0.2), ground - 12, Math.floor(width * 0.8), ground - 10, ELEMENTS.soil.id);
-      // Canal
-      fillRect(grid, width, Math.floor(width * 0.05), ground - 2, Math.floor(width * 0.95), ground, ELEMENTS.water.id);
-      // Seeds sprinkled
-      sprinkle(grid, width, Math.floor(width * 0.6), ELEMENTS.seed.id);
+      const base = Math.floor(height * 0.72);
+      bandFill(grid, width, base, height - base, ELEMENTS.soil.id);
+      // neat soil rows
+      bandFill(grid, width, base - 4, 2, ELEMENTS.soil.id);
+      bandFill(grid, width, base - 10, 2, ELEMENTS.soil.id);
+      bandFill(grid, width, base - 16, 2, ELEMENTS.soil.id);
+      // water pond
+      fillRect(grid, width, Math.floor(width * 0.1), base - 2, Math.floor(width * 0.4), base, ELEMENTS.water.id);
+      // wooden fence
+      for (let x = Math.floor(width * 0.55); x < Math.floor(width * 0.9); x++) {
+        const y = base - 6 + (x % 3 === 0 ? -1 : 0);
+        if (y >= 0) grid[y * width + x] = ELEMENTS.wood.id;
+      }
+      // seeds aligned on rows
+      for (let x = Math.floor(width * 0.15); x < Math.floor(width * 0.85); x += 3) {
+        const y = base - 5 - (x % 6 === 0 ? 1 : 0);
+        grid[y * width + x] = ELEMENTS.seed.id;
+      }
+      // plants near water edge
+      sprinkle(grid, width, Math.floor(width * 0.2), ELEMENTS.plant.id);
       return grid;
     }
   },
@@ -51,13 +67,21 @@ export const PRESETS: Preset[] = [
     descriptionKey: 'preset.delta.desc',
     build: (width, height) => {
       const grid = new Uint8Array(width * height);
-      const ground = Math.floor(height * 0.75);
+      const ground = Math.floor(height * 0.78);
       fillRect(grid, width, 0, ground, width, height - 1, ELEMENTS.sand.id);
+      // river main channel
+      const riverY = ground - 4;
       for (let x = 0; x < width; x++) {
-        const y = ground - Math.floor(4 * Math.sin(x / 9));
-        if (y < height && y >= 0) grid[y * width + x] = ELEMENTS.water.id;
+        const offset = Math.floor(5 * Math.sin(x / 7));
+        const y = riverY + offset;
+        if (y >= 0 && y < height) {
+          grid[y * width + x] = ELEMENTS.water.id;
+          if (y + 1 < height) grid[(y + 1) * width + x] = ELEMENTS.water.id;
+        }
       }
-      sprinkle(grid, width, Math.floor(width * 0.3), ELEMENTS.plant.id);
+      // sandbanks and greenery
+      sprinkle(grid, width, Math.floor(width * 0.25), ELEMENTS.plant.id);
+      sprinkle(grid, width, Math.floor(width * 0.15), ELEMENTS.stone.id);
       return grid;
     }
   },
@@ -67,15 +91,15 @@ export const PRESETS: Preset[] = [
     descriptionKey: 'preset.desert.desc',
     build: (width, height) => {
       const grid = new Uint8Array(width * height);
-      const base = Math.floor(height * 0.65);
+      const base = Math.floor(height * 0.68);
       for (let x = 0; x < width; x++) {
-        const offset = Math.floor(8 * Math.sin(x / 6));
+        const offset = Math.floor(10 * Math.sin(x / 8) + 4 * Math.sin(x / 3));
         for (let y = base + offset; y < height; y++) {
           grid[y * width + x] = ELEMENTS.sand.id;
         }
       }
-      sprinkle(grid, width, Math.floor(width * 0.1), ELEMENTS.stone.id);
-      sprinkle(grid, width, Math.floor(width * 0.05), ELEMENTS.fire.id);
+      sprinkle(grid, width, Math.floor(width * 0.12), ELEMENTS.stone.id);
+      sprinkle(grid, width, Math.floor(width * 0.06), ELEMENTS.fire.id);
       return grid;
     }
   },
@@ -87,7 +111,12 @@ export const PRESETS: Preset[] = [
       const grid = new Uint8Array(width * height);
       const ridge = Math.floor(height * 0.6);
       fillRect(grid, width, 0, ridge, width, height - 1, ELEMENTS.stone.id);
-      sprinkle(grid, width, Math.floor(width * 0.08), ELEMENTS.fire.id);
+      for (let x = Math.floor(width * 0.2); x < Math.floor(width * 0.8); x += 5) {
+        const ventY = ridge - 2 - Math.floor(2 * Math.sin(x / 5));
+        grid[ventY * width + x] = ELEMENTS.fire.id;
+        grid[(ventY - 1) * width + x] = ELEMENTS.steam.id;
+      }
+      sprinkle(grid, width, Math.floor(width * 0.06), ELEMENTS.fire.id);
       sprinkle(grid, width, Math.floor(width * 0.05), ELEMENTS.steam.id);
       return grid;
     }
@@ -98,11 +127,14 @@ export const PRESETS: Preset[] = [
     descriptionKey: 'preset.rainforest.desc',
     build: (width, height) => {
       const grid = new Uint8Array(width * height);
-      const ground = Math.floor(height * 0.68);
+      const ground = Math.floor(height * 0.7);
       fillRect(grid, width, 0, ground, width, height - 1, ELEMENTS.soil.id);
-      sprinkle(grid, width, Math.floor(width * 0.5), ELEMENTS.plant.id);
-      sprinkle(grid, width, Math.floor(width * 0.3), ELEMENTS.water.id);
-      sprinkle(grid, width, Math.floor(width * 0.1), ELEMENTS.seed.id);
+      // dense plant canopy
+      sprinkle(grid, width, Math.floor(width * 0.7), ELEMENTS.plant.id);
+      // moisture pockets
+      sprinkle(grid, width, Math.floor(width * 0.35), ELEMENTS.water.id);
+      // seeds scattered
+      sprinkle(grid, width, Math.floor(width * 0.15), ELEMENTS.seed.id);
       return grid;
     }
   },

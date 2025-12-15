@@ -49,7 +49,7 @@ const en = {
   'stats.lowPowerOn': 'Low-power on',
   'stats.lowPowerOff': 'Low-power off',
   'controls.presets': 'Templates',
-  'controls.applyPreset': 'Apply',
+  'controls.applyPreset': 'Load template',
   'controls.presetApplied': 'Template applied.',
   'controls.presetFailed': 'Unable to load template.',
   'how.title': 'How it works',

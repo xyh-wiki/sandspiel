@@ -49,7 +49,7 @@ const zh = {
   'stats.lowPowerOn': '省电已开',
   'stats.lowPowerOff': '省电关闭',
   'controls.presets': '模板',
-  'controls.applyPreset': '应用',
+  'controls.applyPreset': '加载模板',
   'controls.presetApplied': '模板已应用。',
   'controls.presetFailed': '模板加载失败。',
   'how.title': '运行原理',
