@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sandspiel | Browser Sand Simulation Playground</title>
+    <meta name="description" content="Sandspiel is a browser-based falling sand simulation with water, fire, and plant reactions. Paint, experiment, and export your creations instantly." />
+    <meta name="theme-color" content="#0f172a" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Sandspiel | Browser Sand Simulation Playground" />
+    <meta property="og:description" content="Paint, simulate, and share falling sand, water, and fire directly in your browser." />
+    <meta property="og:url" content="https://sandspiel.xyh.wiki" />
+    <meta property="og:image" content="https://sandspiel.xyh.wiki/assets/og-cover.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Sandspiel | Browser Sand Simulation Playground" />
+    <meta name="twitter:description" content="Browser sand simulation with smooth reactions and exports." />
+    <meta name="twitter:image" content="https://sandspiel.xyh.wiki/assets/og-cover.png" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/icons/favicon-48.png" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/icons/favicon-96.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/favicon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icons/favicon-512.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Sandspiel",
+        "url": "https://sandspiel.xyh.wiki",
+        "description": "Browser-based falling sand simulation with creative element reactions.",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Any",
+        "browserRequirements": "Requires a modern browser with Canvas support"
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://sandspiel.xyh.wiki"},
+          {"@type": "ListItem", "position": 2, "name": "Simulator", "item": "https://sandspiel.xyh.wiki#simulator"}
+        ]
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Do simulations run entirely in the browser?",
+            "acceptedAnswer": {"@type": "Answer", "text": "Yes. All physics and rendering stay on your device; no backend is required."}
+          },
+          {
+            "@type": "Question",
+            "name": "How can I reduce lag on mobile?",
+            "acceptedAnswer": {"@type": "Answer", "text": "Use the low-power mode toggle to reduce resolution and frame rate, and prefer smaller brush strokes."}
+          },
+          {
+            "@type": "Question",
+            "name": "Is my data stored anywhere?",
+            "acceptedAnswer": {"@type": "Answer", "text": "Saves stay in localStorage or downloaded files; nothing is uploaded."}
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
