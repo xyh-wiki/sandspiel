@@ -7,7 +7,7 @@ import { useI18n } from '../i18n';
 const GRID_WIDTH = 176;
 const GRID_HEIGHT = 118;
 const HISTORY_LIMIT = 8;
-const NOISE_RANGE = 14;
+const NOISE_RANGE = 8;
 
 const CanvasBoard: React.FC = () => {
   const { t } = useI18n();
@@ -142,15 +142,8 @@ const CanvasBoard: React.FC = () => {
     }
     offCtx.putImageData(imageData, 0, 0);
     viewCtx.clearRect(0, 0, viewCtx.canvas.width, viewCtx.canvas.height);
-    viewCtx.imageSmoothingEnabled = true;
+    viewCtx.imageSmoothingEnabled = false; // keep cells crisp while retaining color variation
     viewCtx.drawImage(offCtx.canvas, 0, 0, viewCtx.canvas.width, viewCtx.canvas.height);
-    if (!lowPower) {
-      viewCtx.globalAlpha = 0.32;
-      viewCtx.filter = 'blur(8px)';
-      viewCtx.drawImage(offCtx.canvas, 0, 0, viewCtx.canvas.width, viewCtx.canvas.height);
-      viewCtx.filter = 'none';
-      viewCtx.globalAlpha = 1;
-    }
   };
 
   const pushHistory = () => {
