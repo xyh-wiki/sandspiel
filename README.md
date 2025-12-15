@@ -3,9 +3,10 @@
 A production-ready, static React + TypeScript site for running a falling-sand simulation directly in the browser. Includes i18n (EN/中文) with auto-detect, light/dark theming, local saves/exports, SEO assets, and a Related Tools module.
 
 ## Features
-- Canvas-based sand/water/stone/plant/fire simulation with play/pause, step, reset, undo, low-power toggle, random fill, clear, and brush sizing.
+- Canvas-based sand/water/stone/soil/wood/plant/seed/fire/steam simulation with play/pause, step, reset, undo, low-power toggle, random fill, clear, and brush sizing.
 - Save/load locally (localStorage), download/import JSON, and export PNG snapshots.
 - Mobile-friendly controls, touch support, no hover-only actions; performance guardrails for low-power devices.
+- Templates: default “Garden homestead” plus river delta, desert dunes, volcanic ridge, rainforest edge, and blank slate.
 - i18n with auto language detection (navigator), user override persisted; theme respects system and persists.
 - SEO-ready: meta tags, Open Graph/Twitter, WebApplication + FAQPage + BreadcrumbList JSON-LD, sitemap.xml, robots.txt, full favicon set.
 - Related tools/eCosystem links rendered from a centralized config in main content and footer.

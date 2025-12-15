@@ -117,7 +117,9 @@ export const stepGrid = (
           buffer[idx] = id;
           break;
         }
-        case 'stone': {
+        case 'stone':
+        case 'soil':
+        case 'wood': {
           buffer[idx] = id;
           break;
         }
@@ -129,7 +131,6 @@ export const stepGrid = (
             if (!inBounds(nx, ny, width, height)) continue;
             const neighborId = grid[ny * width + nx];
             if (neighborId === ELEMENTS.water.id && rand() > 0.7) {
-              // grow into a nearby empty slot
               const tx = x + (rand() > 0.5 ? 1 : -1);
               const ty = y + (rand() > 0.5 ? 1 : -1);
               if (inBounds(tx, ty, width, height) && grid[ty * width + tx] === 0 && buffer[ty * width + tx] === 0) {
@@ -148,6 +149,30 @@ export const stepGrid = (
           }
           break;
         }
+        case 'seed': {
+          const belowY = y + 1;
+          if (inBounds(x, belowY, width, height) && grid[belowY * width + x] === 0 && buffer[belowY * width + x] === 0) {
+            buffer[belowY * width + x] = id;
+            continue;
+          }
+          const dir = rand() > 0.5 ? 1 : -1;
+          if (inBounds(x + dir, belowY, width, height) && grid[belowY * width + x + dir] === 0 && buffer[belowY * width + x + dir] === 0) {
+            buffer[belowY * width + x + dir] = id;
+            continue;
+          }
+          let sprout = false;
+          for (const [dx, dy] of neighbors) {
+            const nx = x + dx;
+            const ny = y + dy;
+            if (!inBounds(nx, ny, width, height)) continue;
+            const neighborId = grid[ny * width + nx];
+            if (neighborId === ELEMENTS.water.id || neighborId === ELEMENTS.soil.id) {
+              sprout = rand() > 0.6;
+            }
+          }
+          buffer[idx] = sprout ? ELEMENTS.plant.id : id;
+          break;
+        }
         case 'fire': {
           let extinguished = false;
           for (const [dx, dy] of neighbors) {
@@ -159,17 +184,42 @@ export const stepGrid = (
               extinguished = true;
               break;
             }
-            if (neighborId === ELEMENTS.plant.id && buffer[ny * width + nx] === 0) {
+            if (
+              (neighborId === ELEMENTS.plant.id || neighborId === ELEMENTS.wood.id || neighborId === ELEMENTS.seed.id) &&
+              buffer[ny * width + nx] === 0
+            ) {
               buffer[ny * width + nx] = ELEMENTS.fire.id;
             }
           }
           if (extinguished || rand() > 0.96) {
-            // briefly disappear
+            if (extinguished && buffer[idx] === 0) {
+              buffer[idx] = ELEMENTS.steam.id;
+            }
             continue;
           }
           const upward = y - 1;
           if (inBounds(x, upward, width, height) && grid[upward * width + x] === 0 && buffer[upward * width + x] === 0) {
             buffer[upward * width + x] = id;
+          } else {
+            buffer[idx] = id;
+          }
+          break;
+        }
+        case 'steam': {
+          if (rand() > 0.98) {
+            continue;
+          }
+          const upward = y - 1;
+          const dir = rand() > 0.5 ? 1 : -1;
+          const sideways = x + dir;
+          if (inBounds(x, upward, width, height) && grid[upward * width + x] === 0 && buffer[upward * width + x] === 0) {
+            buffer[upward * width + x] = id;
+          } else if (
+            inBounds(sideways, upward, width, height) &&
+            grid[upward * width + sideways] === 0 &&
+            buffer[upward * width + sideways] === 0
+          ) {
+            buffer[upward * width + sideways] = id;
           } else {
             buffer[idx] = id;
           }

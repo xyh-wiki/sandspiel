@@ -42,6 +42,35 @@ export const ELEMENTS: Record<ElementKey, ElementConfig> = {
     density: 0,
     drift: -1,
     coolDown: 24
+  },
+  soil: {
+    id: 6,
+    name: 'Soil',
+    color: [134, 98, 62],
+    density: 7,
+    isStatic: true
+  },
+  wood: {
+    id: 7,
+    name: 'Wood',
+    color: [121, 82, 54],
+    density: 7,
+    isStatic: true,
+    flammable: true
+  },
+  seed: {
+    id: 8,
+    name: 'Seed',
+    color: [196, 167, 92],
+    density: 3
+  },
+  steam: {
+    id: 9,
+    name: 'Steam',
+    color: [178, 210, 240],
+    density: 0,
+    drift: -1,
+    coolDown: 12
   }
 };
 
@@ -53,4 +82,4 @@ export const ELEMENT_BY_ID: Record<number, ElementKey> = Object.entries(ELEMENTS
   {} as Record<number, ElementKey>
 );
 
-export const PALETTE: ElementKey[] = ['sand', 'water', 'stone', 'plant', 'fire', 'empty'];
+export const PALETTE: ElementKey[] = ['sand', 'water', 'stone', 'soil', 'wood', 'plant', 'seed', 'fire', 'steam', 'empty'];

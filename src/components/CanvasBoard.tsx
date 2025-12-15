@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { applyBrush, countParticles, createGrid, hydrateGrid, serializeGrid, stepGrid } from '../simulation/engine';
 import { ELEMENTS } from '../simulation/elements';
+import { PRESETS } from '../simulation/presets';
 import { useUIStore } from '../state/uiStore';
 import { useI18n } from '../i18n';
 
@@ -18,6 +19,7 @@ const CanvasBoard: React.FC = () => {
   const offscreenRef = useRef<HTMLCanvasElement | null>(null);
   const imageDataRef = useRef<ImageData | null>(null);
   const noiseRef = useRef<Uint8Array>(new Uint8Array(GRID_WIDTH * GRID_HEIGHT));
+  const initializedPreset = useRef(false);
   const [fps, setFps] = useState(0);
   const [particles, setParticles] = useState(0);
   const [status, setStatus] = useState<string>(t('status.ready'));
@@ -32,6 +34,7 @@ const CanvasBoard: React.FC = () => {
   const setLowPower = useUIStore((s) => s.setLowPower);
   const [saveMessage, setSaveMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [presetId, setPresetId] = useState<string>('garden-homestead');
 
   const colorLut = useMemo(() => {
     const maxId = Math.max(...Object.values(ELEMENTS).map((e) => e.id));
@@ -119,6 +122,12 @@ const CanvasBoard: React.FC = () => {
       frameRef.current = 0;
     }, 1000);
     return () => window.clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    if (initializedPreset.current) return;
+    initializedPreset.current = true;
+    applyPreset('garden-homestead');
   }, []);
 
   const drawGrid = (
@@ -214,11 +223,15 @@ const CanvasBoard: React.FC = () => {
     const grid = gridRef.current;
     for (let i = 0; i < grid.length; i++) {
       const roll = Math.random();
-      if (roll > 0.92) grid[i] = ELEMENTS.sand.id;
-      else if (roll > 0.88) grid[i] = ELEMENTS.water.id;
-      else if (roll > 0.86) grid[i] = ELEMENTS.stone.id;
-      else if (roll > 0.845) grid[i] = ELEMENTS.plant.id;
-      else if (roll > 0.84) grid[i] = ELEMENTS.fire.id;
+      if (roll > 0.94) grid[i] = ELEMENTS.sand.id;
+      else if (roll > 0.9) grid[i] = ELEMENTS.water.id;
+      else if (roll > 0.88) grid[i] = ELEMENTS.stone.id;
+      else if (roll > 0.86) grid[i] = ELEMENTS.soil.id;
+      else if (roll > 0.84) grid[i] = ELEMENTS.wood.id;
+      else if (roll > 0.82) grid[i] = ELEMENTS.plant.id;
+      else if (roll > 0.81) grid[i] = ELEMENTS.seed.id;
+      else if (roll > 0.805) grid[i] = ELEMENTS.fire.id;
+      else if (roll > 0.8) grid[i] = ELEMENTS.steam.id;
     }
     setStatus(t('status.updated'));
   };
@@ -304,6 +317,17 @@ const CanvasBoard: React.FC = () => {
     setStatus(t('status.updated'));
   };
 
+  const applyPreset = (id: string) => {
+    const preset = PRESETS.find((p) => p.id === id);
+    if (!preset) {
+      setStatus(t('controls.presetFailed'));
+      return;
+    }
+    pushHistory();
+    gridRef.current = preset.build(GRID_WIDTH, GRID_HEIGHT);
+    setStatus(t('controls.presetApplied'));
+  };
+
   return (
     <section id="simulator" className="section">
       <div className="container card" style={{ display: 'grid', gap: '1rem' }}>
@@ -345,7 +369,7 @@ const CanvasBoard: React.FC = () => {
               <button className="btn" onClick={() => { pushHistory(); gridRef.current.fill(0); }}>{t('controls.clear')}</button>
             </div>
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-              {(['sand', 'water', 'stone', 'plant', 'fire', 'empty'] as const).map((key) => (
+              {(['sand', 'water', 'stone', 'soil', 'wood', 'plant', 'seed', 'fire', 'steam', 'empty'] as const).map((key) => (
                 <button
                   key={key}
                   className="btn"
@@ -365,6 +389,29 @@ const CanvasBoard: React.FC = () => {
                   onChange={(e) => setBrushSize(Number(e.target.value))}
                 />
               </label>
+            </div>
+            <div className="card" style={{ display: 'grid', gap: '0.35rem', background: 'var(--surface-strong)' }}>
+              <div style={{ fontWeight: 600 }}>{t('controls.presets')}</div>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <select
+                  aria-label={t('controls.presets')}
+                  value={presetId}
+                  onChange={(e) => setPresetId(e.target.value)}
+                  style={{ padding: '0.5rem', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-primary)' }}
+                >
+                  {PRESETS.map((preset) => (
+                    <option key={preset.id} value={preset.id}>
+                      {t(preset.nameKey as any)}
+                    </option>
+                  ))}
+                </select>
+                <button className="btn btn-primary" onClick={() => applyPreset(presetId)}>
+                  {t('controls.applyPreset')}
+                </button>
+              </div>
+              <div style={{ color: 'var(--muted)' }}>
+                {t((PRESETS.find((p) => p.id === presetId)?.descriptionKey ?? 'controls.recommendation') as any)}
+              </div>
             </div>
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               <button className="btn" onClick={saveSlot}>{t('controls.saveLocal')}</button>

@@ -1,4 +1,14 @@
-export type ElementKey = 'empty' | 'sand' | 'water' | 'stone' | 'plant' | 'fire';
+export type ElementKey =
+  | 'empty'
+  | 'sand'
+  | 'water'
+  | 'stone'
+  | 'plant'
+  | 'fire'
+  | 'soil'
+  | 'wood'
+  | 'seed'
+  | 'steam';
 
 export interface ElementConfig {
   id: number;
